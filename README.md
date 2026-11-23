@@ -1,142 +1,318 @@
-# VoltGuard — EV Battery Temperature Monitoring Simulator
+# VoltGuard – EV Battery Temperature Monitoring Simulator
 
-This version keeps the **simulation engine and REST API in C**. The web page is HTML/CSS/JavaScript only for presentation and HTTP requests.
+VoltGuard is a web-based **EV Battery Temperature Monitoring Simulator** that demonstrates how battery temperature can change under different operating and cooling conditions. Users can adjust simulation parameters, run a thermal simulation, view the temperature response, and inspect saved simulation readings.
 
-## Deployment without Docker commands or a Dockerfile
+> **Project type:** Academic / educational simulator  
+> **Domain:** Electric Vehicles, Battery Thermal Management, Web Application  
+> **Backend language:** C  
+> **Frontend:** HTML, CSS, JavaScript  
+> **Database:** SQLite  
+> **Deployment:** Render
 
-- Frontend: Vercel
-- C backend: Railway using Railpack build/start commands
-- Database: SQLite (starter database is local to the backend service)
+---
 
-Railway's builder packages the service internally; **you do not install or run Docker Desktop, write a Dockerfile, or use Docker commands**.
+## Live Demo
 
-## Project structure
+- **Live website (share this link):** https://ev-battery-monitor-ujgw.onrender.com
+- **Backend API:** https://ev-battery-backend-rsy2.onrender.com
+- **API health check:** https://ev-battery-backend-rsy2.onrender.com/api/health
+
+The website link is the main link to share with your professor or evaluators. The backend links are provided for technical/API verification.
+
+> **Hosting note:** The backend is hosted on Render's free service. It may take a short time to respond after being idle because the service can sleep. Data stored in the service's local SQLite file may not survive service restarts or redeployments.
+
+---
+
+## Features
+
+- Interactive battery-temperature simulation.
+- User-adjustable simulation inputs, including:
+  - Battery current
+  - Ambient temperature
+  - Initial battery temperature
+  - Cooling coefficient
+  - Simulation duration
+- Thermal model that estimates battery temperature over time.
+- Temperature safety-status classification:
+  - **LOW:** below 5 °C
+  - **NORMAL:** 5 °C to below 45 °C
+  - **WARNING:** 45 °C to below 60 °C
+  - **CRITICAL:** 60 °C and above
+- Temperature chart for viewing the simulation response.
+- Simulation history stored using SQLite.
+- History viewing and reset/clear-history functionality.
+- C-based HTTP API connected to a browser-based dashboard.
+
+**Important:** VoltGuard is an educational simulator. It does not connect to a real EV battery, physical temperature sensor, Battery Management System (BMS), or vehicle CAN bus. Its output is based on the implemented mathematical model and user-provided inputs.
+
+---
+
+## Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | C (C11) |
+| HTTP server | C with socket-based networking |
+| Compiler | GCC |
+| Database | SQLite |
+| Frontend | HTML, CSS, JavaScript |
+| Charts | Browser-side chart visualization |
+| Hosting | Render |
+| API communication | HTTP / JSON |
+
+---
+
+## How It Works
+
+1. The user opens the VoltGuard dashboard.
+2. The user sets the simulation parameters using the available controls.
+3. The frontend sends the selected values to the C backend through the `/api/simulate` endpoint.
+4. The backend applies the thermal calculation and generates simulation results.
+5. The frontend displays the resulting temperature information and chart.
+6. The backend stores available readings in SQLite so that the history endpoint can return them.
+7. The user can view the saved history or clear it using the dashboard controls.
+
+### Thermal Model
+
+The simulator uses a simplified heat-generation and cooling model.
+
+Electrical heat generation:
+
+\[
+P_{\text{heat}} = I^2R
+\]
+
+where:
+
+- \(I\) is the battery current in amperes.
+- \(R\) is the assumed internal resistance in ohms.
+
+Cooling power:
+
+\[
+P_{\text{cooling}} = h(T - T_{\text{ambient}})
+\]
+
+where:
+
+- \(h\) is the cooling coefficient.
+- \(T\) is the estimated battery temperature.
+- \(T_{\text{ambient}}\) is the ambient temperature.
+
+The implementation uses these model constants:
+
+- Assumed internal resistance: **0.045 Ω**
+- Thermal mass: **280 kg**
+- Specific heat capacity: **900 J/(kg·K)**
+
+These are simulator assumptions, not measurements from a physical battery pack. The model is intended for demonstration and learning, not for engineering certification or real-world battery safety decisions.
+
+---
+
+## API Endpoints
+
+Base URL:
 
 ```text
-EV_Battery_Temperature_Monitoring_C_Vercel_Railway/
-├── backend/
-│   ├── main.c          # C HTTP server, thermal simulation, SQLite API
-│   ├── Procfile        # Railway web process hint
-│   └── CMakeLists.txt
-└── frontend/
-    ├── index.html      # Dashboard
-    ├── style.css       # Responsive UI
-    ├── app.js          # Calls the C API and renders charts/history
-    ├── config.js       # Set the deployed C API URL here
-    └── vercel.json
+https://ev-battery-backend-rsy2.onrender.com
 ```
 
-## 1. Deploy the C backend on Railway
-
-1. Push the complete project to a GitHub repository.
-2. Open https://railway.com and create a project from that GitHub repository.
-3. Add/select the service for this repository.
-4. In service Settings, set **Root Directory** to `/backend`.
-5. Set the **Build Command** to:
-
-```bash
-gcc -std=c11 -O2 -Wall -Wextra main.c -lsqlite3 -lm -o ev-battery-api
-```
-
-6. Set the **Start Command** to:
-
-```bash
-./ev-battery-api
-```
-
-7. Add these service variables (space-separated package names):
-
-```text
-RAILPACK_BUILD_APT_PACKAGES=... gcc libsqlite3-dev
-RAILPACK_DEPLOY_APT_PACKAGES=... libsqlite3-0
-```
-
-The first installs the C compiler and SQLite headers during build. The second supplies the SQLite shared library at runtime. Railway/Railpack documents custom build/start commands and additional Apt packages.
-
-8. Deploy the service. In Settings → Networking, generate a public domain.
-9. Test this URL in a browser:
-
-```text
-https://YOUR-RAILWAY-DOMAIN/api/health
-```
-
-Expected response:
-
-```json
-{"ok":true,"service":"EV Battery C API"}
-```
-
-Railway's free plan currently includes $1 of monthly usage and services sleep when idle; a new account also receives a 30-day trial with a one-time $5 credit. The backend may sleep when idle, so the first request after a quiet period can take longer. Check current usage in Railway before relying on it for a long-running public demo.
-
-## 2. Connect the frontend to the C backend
-
-Open `frontend/config.js` and replace the local URL with the public Railway URL:
-
-```js
-window.APP_CONFIG = {
-  API_BASE: "https://YOUR-RAILWAY-DOMAIN"
-};
-```
-
-Do not add a trailing slash. Commit and push this change to GitHub.
-
-## 3. Deploy the frontend on Vercel
-
-1. Open https://vercel.com/new and import the same GitHub repository.
-2. Set **Root Directory** to `frontend`.
-3. Framework preset: **Other**.
-4. Build command: leave empty.
-5. Output directory: `.` (or the project root as Vercel's static output directory).
-6. Deploy.
-
-Your public Vercel URL is the demo link to share. The frontend sends simulation requests to the separate C backend.
-
-## 4. Local demo on Windows
-
-The supplied C server uses POSIX sockets, so the simplest Windows setup is **WSL (Ubuntu)** or a Linux terminal with GCC and SQLite development headers. In WSL, from `backend`:
-
-```bash
-sudo apt update
-sudo apt install gcc libsqlite3-dev
-gcc -std=c11 -O2 -Wall -Wextra main.c -lsqlite3 -lm -o ev-battery-api
-./ev-battery-api
-```
-
-It listens on port 8080 by default. Open the frontend with VS Code Live Server and keep `frontend/config.js` set to `http://localhost:8080`.
-
-## 5. API endpoints
-
-| Method | Endpoint | Description |
+| Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/api/health` | C backend health check |
-| POST | `/api/simulate` | Calculate and save one thermal simulation |
-| GET | `/api/readings` | Read the latest 100 SQLite records |
-| POST | `/api/reset` | Clear simulation history |
+| GET | `/api/health` | Checks whether the backend API is responding. |
+| POST | `/api/simulate` | Runs a battery-temperature simulation using submitted parameters. |
+| GET | `/api/readings` | Retrieves saved simulation readings. |
+| POST | `/api/reset` | Resets/clears the stored simulation history. |
 
-Example simulation request:
+### Health Check
+
+Open this URL in a browser:
+
+```text
+https://ev-battery-backend-rsy2.onrender.com/api/health
+```
+
+A successful response should look similar to:
 
 ```json
 {
-  "current": 250,
-  "ambient": 35,
-  "initialTemp": 30,
-  "cooling": 22,
-  "duration": 120
+  "ok": true,
+  "service": "EV Battery C API"
 }
 ```
 
-## 6. How the C thermal model works
+---
 
-The backend uses a simplified lumped thermal model:
+## Project Structure
 
-- Resistive heat: `P_heat = I² × R`
-- Cooling: `P_cooling = h × (T_battery − T_ambient)`
-- Temperature change: `ΔT = (P_heat − P_cooling) × Δt / (m × Cp)`
+The repository is organized into separate frontend and backend folders.
 
-Illustrative constants: `R = 0.045 Ω`, `m = 280 kg`, `Cp = 900 J/(kg·K)`. Demo status thresholds: below 5°C LOW; 5–44°C NORMAL; 45–59°C WARNING; 60°C or higher CRITICAL.
+```text
+EV-Battery-Temperature-Monitoring-Simulator/
+├── backend/
+│   ├── main.c
+│   └── ...                 # Backend build/deployment files, if included
+│
+├── frontend/
+│   ├── index.html          # Main dashboard page
+│   ├── style.css           # Dashboard styling
+│   ├── app.js              # Frontend interactions and API calls
+│   ├── config.js           # Backend API base URL
+│   └── vercel.json         # Frontend hosting configuration, if retained
+│
+└── README.md
+```
 
-## Important limitations
+The exact additional files may vary depending on the version committed to the repository.
 
-This is an educational simulator, not a physical battery monitoring device. It does not connect to EV sensors, a BMS or a CAN bus. The thermal model and thresholds are illustrative and are not certified for engineering or safety decisions.
+---
 
-SQLite data on an ephemeral service filesystem can be lost when the service is redeployed or restarted. For a short academic demonstration this may be acceptable; if durable history is required, attach a persistent volume and update the database path in the C program to the volume mount path.
+## Run Locally
+
+### Requirements
+
+- Windows, Linux, or macOS
+- GCC C compiler
+- SQLite development library and headers
+- A modern web browser
+- Python 3 (optional, for serving the frontend locally)
+
+### 1. Compile the C backend
+
+Open a terminal in the `backend` directory.
+
+On a system where GCC and SQLite development files are installed, compile with:
+
+```bash
+gcc -std=c11 -O2 -Wall -Wextra main.c -lsqlite3 -lm -o ev-battery-api
+```
+
+### 2. Start the backend
+
+On Linux/macOS:
+
+```bash
+./ev-battery-api
+```
+
+On Windows, run the generated executable from the terminal:
+
+```powershell
+.\ev-battery-api.exe
+```
+
+The server uses the `PORT` environment variable when provided and otherwise defaults to port `8080`.
+
+### 3. Configure the frontend
+
+Open `frontend/config.js` and set the API base URL to the local backend address:
+
+```javascript
+window.APP_CONFIG = {
+  API_BASE: "http://localhost:8080"
+};
+```
+
+For the deployed website, the API base URL should point to the deployed backend:
+
+```javascript
+window.APP_CONFIG = {
+  API_BASE: "https://ev-battery-backend-rsy2.onrender.com"
+};
+```
+
+Use the appropriate value for the environment you are running.
+
+### 4. Open the frontend
+
+You can open `frontend/index.html` in a browser. If browser restrictions affect API requests, serve the frontend through a local development server instead. For example, from the `frontend` directory:
+
+```bash
+python -m http.server 5500
+```
+
+Then open:
+
+```text
+http://localhost:5500
+```
+
+---
+
+## Deployment Overview
+
+The project is deployed on Render as two services:
+
+1. **Backend Web Service:** runs the compiled C API.
+2. **Frontend Static Site:** serves the HTML, CSS, and JavaScript dashboard.
+
+The frontend's `config.js` must contain the public backend URL so the dashboard can send API requests to the C service.
+
+No Docker container or WebAssembly backend is required for this deployment.
+
+---
+
+## Testing Checklist
+
+Use this checklist when demonstrating the project:
+
+- [ ] Open the live website.
+- [ ] Confirm that the dashboard loads.
+- [ ] Change one or more simulation inputs.
+- [ ] Run a simulation and confirm that result values are displayed.
+- [ ] Confirm that the temperature chart updates.
+- [ ] Open the history section and check saved readings.
+- [ ] Test the clear/reset history control.
+- [ ] Open the backend health-check URL and confirm that the API responds.
+
+Only mark a test as complete after personally verifying it in the deployed application.
+
+---
+
+## Limitations and Future Enhancements
+
+### Current limitations
+
+- The application is a mathematical simulator, not a physical battery-monitoring device.
+- The thermal model uses simplified assumptions and fixed model constants.
+- It does not acquire readings from real sensors or an EV battery pack.
+- Render free hosting may sleep when idle.
+- Local SQLite data on a free hosted instance may be lost after a restart or redeployment.
+
+### Possible future enhancements
+
+- Calibrate the thermal model using documented battery test data.
+- Add downloadable simulation reports.
+- Add user accounts and individual simulation histories.
+- Use persistent managed database storage for production deployment.
+- Add validated battery-pack parameters for different battery chemistries and configurations.
+- Integrate physical sensors and a BMS only as a separately engineered and safety-validated extension.
+
+---
+
+## Academic Project Information
+
+- **Project:** EV Battery Temperature Monitoring Simulator
+- **Project name/brand:** VoltGuard
+- **Student:** Manthan Garg
+- **Roll number:** 24BCS10883
+- **Programme:** B.Tech
+- **Branch:** Computer Science and Engineering
+- **University:** Chandigarh University
+- **Academic session:** 2026–2027
+- **Project guide:** Rahul Duragapal, Assistant Professor
+
+
+---
+
+## Author
+
+**Manthan Garg**  
+B.Tech – Computer Science and Engineering  
+Chandigarh University
+
+---
+
+## Disclaimer
+
+VoltGuard is developed for academic demonstration and educational purposes. It is not a certified battery-management, diagnostic, or safety system. Do not use its simulated results to operate, charge, diagnose, or make safety decisions about a real electric-vehicle battery.
