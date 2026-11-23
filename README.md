@@ -13,11 +13,11 @@ VoltGuard is a web-based **EV Battery Temperature Monitoring Simulator** that de
 
 ## Live Demo
 
-- **Live website (share this link):** https://ev-battery-monitor-ujgw.onrender.com
+- **Live website :** https://ev-battery-monitor-ujgw.onrender.com
 - **Backend API:** https://ev-battery-backend-rsy2.onrender.com
 - **API health check:** https://ev-battery-backend-rsy2.onrender.com/api/health
 
-The website link is the main link to share with your professor or evaluators. The backend links are provided for technical/API verification.
+
 
 > **Hosting note:** The backend is hosted on Render's free service. It may take a short time to respond after being idle because the service can sleep. Data stored in the service's local SQLite file may not survive service restarts or redeployments.
 
@@ -305,7 +305,7 @@ Only mark a test as complete after personally verifying it in the deployed appli
 
 ---
 
-## Author
+## Name
 
 **Manthan Garg**  
 B.Tech – Computer Science and Engineering  
