@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoltGuard | EV Battery Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">ϟ</div><div><b>VoltGuard</b><small>EV BATTERY SYSTEMS</small></div></div>
+      <div class="side-label">MONITORING</div>
+      <a class="nav active" href="#"><span>▦</span> Live dashboard</a>
+      <a class="nav" href="#history"><span>◷</span> Reading history</a>
+      <div class="side-card"><div class="pulse"></div><b>Simulator online</b><p>Thermal model ready</p></div>
+      <div class="side-bottom"><span class="dot"></span> Local simulation environment <small>v1.0.0</small></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><div class="eyebrow">BATTERY MANAGEMENT SYSTEM / DEMO</div><h1>Live battery monitor</h1><p class="sub">Simulate, monitor and understand EV battery thermal behaviour.</p></div>
+        <div class="top-status"><span class="dot"></span> SYSTEM READY</div>
+      </header>
+
+      <section class="metrics">
+        <article class="metric-card temp-card"><div class="metric-top"><span>PACK TEMPERATURE</span><span class="metric-icon">♨</span></div><div class="metric-value"><strong id="temperature">28.0</strong><em>°C</em></div><div class="metric-foot"><span id="tempStatus" class="status-pill normal">NORMAL</span><span>Live model output</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span>BATTERY CURRENT</span><span class="metric-icon">ϟ</span></div><div class="metric-value"><strong id="currentValue">180</strong><em>A</em></div><div class="metric-foot"><span class="muted">Input parameter</span><span>DC pack current</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span>HEAT GENERATION</span><span class="metric-icon">⌁</span></div><div class="metric-value"><strong id="heatValue">1458</strong><em>W</em></div><div class="metric-foot"><span class="muted">I² × R model</span><span>Estimated loss</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span>AMBIENT TEMP.</span><span class="metric-icon">☼</span></div><div class="metric-value"><strong id="ambientValue">25</strong><em>°C</em></div><div class="metric-foot"><span class="muted">Environment</span><span>Surrounding air</span></div></article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>Temperature trend</h2><p>Recorded battery pack temperature</p></div><span class="live-tag"><span class="dot"></span> HISTORY</span></div>
+          <div class="chart-wrap"><canvas id="chart" aria-label="Battery temperature history chart"></canvas><div id="emptyChart" class="empty-chart">Run a simulation to start building your temperature history.</div></div>
+          <div class="chart-legend"><span><i></i> Battery temperature</span><span class="muted">Last 100 readings</span></div>
+        </article>
+
+        <article class="panel controls-panel">
+          <div class="panel-heading"><div><h2>Simulation controls</h2><p>Adjust operating conditions</p></div><span class="sliders-icon">☷</span></div>
+          <form id="simulationForm">
+            <label for="current">Battery current <b><span id="currentLabel">180</span> A</b></label>
+            <input id="current" type="range" min="0" max="600" value="180" step="5">
+            <div class="range-labels"><span>0 A</span><span>600 A</span></div>
+            <label for="ambient">Ambient temperature <b><span id="ambientLabel">25</span> °C</b></label>
+            <input id="ambient" type="range" min="-10" max="55" value="25" step="1">
+            <div class="range-labels"><span>-10 °C</span><span>55 °C</span></div>
+            <label for="initialTemp">Initial battery temperature <b><span id="initialLabel">28</span> °C</b></label>
+            <input id="initialTemp" type="range" min="0" max="80" value="28" step="1">
+            <div class="range-labels"><span>0 °C</span><span>80 °C</span></div>
+            <label for="cooling">Cooling coefficient <b><span id="coolingLabel">22</span> W/K</b></label>
+            <input id="cooling" type="range" min="1" max="100" value="22" step="1">
+            <div class="range-labels"><span>Low cooling</span><span>High cooling</span></div>
+            <label for="duration">Simulation duration <b><span id="durationLabel">60</span> sec</b></label>
+            <input id="duration" type="range" min="10" max="600" value="60" step="10">
+            <div class="range-labels"><span>10 sec</span><span>10 min</span></div>
+            <button id="runButton" class="primary-btn" type="submit"><span>▶</span> Run simulation</button>
+          </form>
+          <p id="message" class="message" role="status">Ready. Change parameters and run a simulation.</p>
+        </article>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="panel health-panel"><div class="panel-heading"><div><h2>Thermal safety zones</h2><p>Illustrative operating thresholds</p></div></div>
+          <div class="zone-list">
+            <div class="zone"><span class="zone-color safe"></span><div><b>Normal</b><small>5°C – 44°C</small></div><span class="zone-note">Optimal range</span></div>
+            <div class="zone"><span class="zone-color warn"></span><div><b>Warning</b><small>45°C – 59°C</small></div><span class="zone-note">Check cooling</span></div>
+            <div class="zone"><span class="zone-color danger"></span><div><b>Critical</b><small>60°C and above</small></div><span class="zone-note">Stop operation</span></div>
+            <div class="zone"><span class="zone-color cold"></span><div><b>Low temperature</b><small>Below 5°C</small></div><span class="zone-note">Performance reduced</span></div>
+          </div>
+        </article>
+        <article class="panel insight-panel"><div class="panel-heading"><div><h2>System insight</h2><p>Latest simulation interpretation</p></div><span class="insight-icon">✦</span></div>
+          <div id="insight" class="insight-text">The battery is operating in the normal temperature zone. Run a simulation to see how current, ambient temperature and cooling affect pack temperature.</div>
+          <div class="model-note"><b>MODEL NOTE</b><p>Uses a simplified lumped thermal model: heat generation = I²R, with convective cooling proportional to the temperature difference.</p></div>
+        </article>
+      </section>
+
+      <section id="history" class="panel history-panel">
+        <div class="panel-heading"><div><h2>Recent readings</h2><p>Saved by the C backend in SQLite</p></div><button id="clearButton" class="outline-btn" type="button">Clear history</button></div>
+        <div class="table-scroll"><table><thead><tr><th>TIME</th><th>TEMPERATURE</th><th>CURRENT</th><th>AMBIENT</th><th>COOLING</th><th>STATUS</th></tr></thead><tbody id="historyRows"><tr><td colspan="6" class="no-data">No readings yet. Run your first simulation.</td></tr></tbody></table></div>
+      </section>
+      <footer>VoltGuard EV Battery Temperature Monitoring Simulator <span>Educational simulation · Not a certified battery safety system</span></footer>
+    </main>
+  </div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
