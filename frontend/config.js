@@ -1,1 +1,4 @@
-window.APP_CONFIG = { API_BASE: "http://localhost:8080" };
+
+window.APP_CONFIG = {
+  API_BASE: "https://ev-battery-backend-rsy2.onrender.com"
+};
